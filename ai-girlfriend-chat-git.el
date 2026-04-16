@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-git.el --- copilot chat git operation -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-git.el --- copilot chat git operation -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -28,19 +28,19 @@
 
 (require 'aio)
 
-(require 'copilot-chat-copilot)
-(require 'copilot-chat-frontend)
-(require 'copilot-chat-spinner)
-(require 'copilot-chat-prompts)
+(require 'ai-girlfriend-chat-copilot)
+(require 'ai-girlfriend-chat-frontend)
+(require 'ai-girlfriend-chat-spinner)
+(require 'ai-girlfriend-chat-prompts)
 
-(defcustom copilot-chat-commit-model nil
+(defcustom ai-girlfriend-chat-commit-model nil
   "The model to use specifically for commit message generation.
-When nil, falls back to `copilot-chat-default-model`.
-Set via `copilot-chat-set-commit-model'."
+When nil, falls back to `ai-girlfriend-chat-default-model`.
+Set via `ai-girlfriend-chat-set-commit-model'."
   :type '(choice (const :tag "Use default model" nil) (string :tag "Specific model"))
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-ignored-commit-files
+(defcustom ai-girlfriend-chat-ignored-commit-files
   '("pnpm-lock.yaml"
     "package-lock.json"
     "yarn.lock"
@@ -69,9 +69,9 @@ These are typically large generated files like lock files or build artifacts
 that don't need to be included in commit message generation.
 Supports glob patterns like `*.lock' or `node_modules/'."
   :type '(repeat string)
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-use-difftastic nil
+(defcustom ai-girlfriend-chat-use-difftastic nil
   "Whether to use difftastic for generating diffs when available.
 Difftastic provides syntax-aware diffs that are often more readable.
 Requires the `difft` command to be installed.
@@ -79,33 +79,33 @@ Requires the `difft` command to be installed.
 Note: Difftastic is experimental here.  It is designed for human reviewers;
 LLMs may understand standard git diff output better."
   :type 'boolean
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-git-wait-message-format
+(defcustom ai-girlfriend-chat-git-wait-message-format
   "# [copilot:%s] Generating commit message..."
   "Format string for the message displayed while generating a commit message.
 The %s placeholder will be replaced by the model name."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-git-regenerate-wait-message-format
+(defcustom ai-girlfriend-chat-git-regenerate-wait-message-format
   "# [copilot:%s] Regenerating commit message..."
   "Format string for the message displayed while regenerating a commit message.
 The %s placeholder will be replaced by the model name."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defvar copilot-chat--git-commit-instance nil
+(defvar ai-girlfriend-chat--git-commit-instance nil
   "Persistent instance for Git commit message generation.")
 
 (aio-defun
- copilot-chat--exec
+ ai-girlfriend-chat--exec
  (&rest command)
  "Asynchronously execute command COMMAND and return its output string."
  (let ((promise (aio-promise))
-       (buf (generate-new-buffer " *copilot-chat-shell-command*")))
+       (buf (generate-new-buffer " *ai-girlfriend-chat-shell-command*")))
    (set-process-sentinel
-    (apply #'start-process "copilot-chat-shell-command" buf command)
+    (apply #'start-process "ai-girlfriend-chat-shell-command" buf command)
     (lambda (proc _signal)
       (when (memq (process-status proc) '(exit signal))
         (with-current-buffer buf
@@ -120,11 +120,11 @@ The %s placeholder will be replaced by the model name."
    (aio-await promise)))
 
 (aio-defun
- copilot-chat--git-top-level () "Get top folder of current git repo."
+ ai-girlfriend-chat--git-top-level () "Get top folder of current git repo."
  (when (executable-find "git")
    (let* ((git-dir
            (aio-await
-            (copilot-chat--exec "git" "rev-parse" "--absolute-git-dir")))
+            (ai-girlfriend-chat--exec "git" "rev-parse" "--absolute-git-dir")))
           (default-directory git-dir)
           cdup)
      (cond
@@ -134,7 +134,7 @@ The %s placeholder will be replaced by the model name."
          (file-name-directory (buffer-string))))
       ((and (setq cdup
                   (aio-await
-                   (copilot-chat--exec "git" "rev-parse" "--show-cdup")))
+                   (ai-girlfriend-chat--exec "git" "rev-parse" "--show-cdup")))
             (not (string-empty-p cdup)))
        cdup)
       (t
@@ -142,14 +142,14 @@ The %s placeholder will be replaced by the model name."
 
 
 (aio-defun
- copilot-chat--git-ls-files (repo-root)
+ ai-girlfriend-chat--git-ls-files (repo-root)
  "Return a list of git managed files in REPO-ROOT.
 Uses `git ls-files` to retrieve files that are tracked or not ignored by
 Git.  REPO-ROOT must be git top directory."
  (let* ((default-directory repo-root)
         (ls-output
          (aio-await
-          (copilot-chat--exec
+          (ai-girlfriend-chat--exec
            "git"
            "--no-pager"
            "ls-files"
@@ -160,7 +160,7 @@ Git.  REPO-ROOT must be git top directory."
         (all-files (split-string ls-output "\n" t)))
    (mapcar (lambda (file) (expand-file-name file repo-root)) all-files)))
 
-(defun copilot-chat--format-git-context (status diff)
+(defun ai-girlfriend-chat--format-git-context (status diff)
   "Format git context information for commit message generation.
 STATUS is the output of git status command.
 DIFF is the output of git diff command."
@@ -179,15 +179,15 @@ DIFF is the output of git diff command."
        "\n")
      "</git_diff>\n" "</git_context>")))
 
-(defun copilot-chat--difftastic-available-p ()
+(defun ai-girlfriend-chat--difftastic-available-p ()
   "Check if difftastic is available on the system."
-  (and copilot-chat-use-difftastic (executable-find "difft")))
+  (and ai-girlfriend-chat-use-difftastic (executable-find "difft")))
 
-(defun copilot-chat--get-diff-command (files-to-include use-difftastic)
+(defun ai-girlfriend-chat--get-diff-command (files-to-include use-difftastic)
   "Get the appropriate diff command based on configuration.
 FILES-TO-INCLUDE is the list of files to include in the diff.
 USE-DIFFTASTIC is non-nil to use difftastic if available."
-  (if (and use-difftastic (copilot-chat--difftastic-available-p))
+  (if (and use-difftastic (ai-girlfriend-chat--difftastic-available-p))
       (append
        (list
         "git"
@@ -205,17 +205,17 @@ USE-DIFFTASTIC is non-nil to use difftastic if available."
      files-to-include)))
 
 (aio-defun
- copilot-chat--get-diff-content ()
+ ai-girlfriend-chat--get-diff-content ()
  "Get the diff content of staged changes.
 
 Returns a string containing the diff content, formatted by
-`copilot-chat--format-git-context`."
+`ai-girlfriend-chat--format-git-context`."
  (let* ((default-directory
-         (or (aio-await (copilot-chat--git-top-level))
+         (or (aio-await (ai-girlfriend-chat--git-top-level))
              (user-error "Not inside a Git repository")))
         (staged-files
          (split-string (aio-await
-                        (copilot-chat--exec
+                        (ai-girlfriend-chat--exec
                          "git" "--no-pager" "diff" "--cached" "--name-only"))
                        "\n" t))
         (files-to-include
@@ -227,21 +227,21 @@ Returns a string containing the diff content, formatted by
                     (wildcard-to-regexp pattern) file)
                    (and (string-suffix-p "/" pattern)
                         (string-prefix-p pattern file))))
-             copilot-chat-ignored-commit-files))
+             ai-girlfriend-chat-ignored-commit-files))
           staged-files)))
    (when files-to-include
      (let* ((status
              (aio-await
-              (copilot-chat--exec
+              (ai-girlfriend-chat--exec
                "git" "status" "--short" "--branch" "--untracked-files=no")))
             (diff-output
              (aio-await
-              (apply #'copilot-chat--exec
-                     (copilot-chat--get-diff-command
-                      files-to-include copilot-chat-use-difftastic)))))
-       (copilot-chat--format-git-context status diff-output)))))
+              (apply #'ai-girlfriend-chat--exec
+                     (ai-girlfriend-chat--get-diff-command
+                      files-to-include ai-girlfriend-chat-use-difftastic)))))
+       (ai-girlfriend-chat--format-git-context status diff-output)))))
 
-(defun copilot-chat--ensure-commit-instance (&optional repo-root)
+(defun ai-girlfriend-chat--ensure-commit-instance (&optional repo-root)
   "Ensure the commit INSTANCE exists, creating it if necessary.
 
 Optional REPO-ROOT specifies the Git repository's top-level directory."
@@ -249,36 +249,36 @@ Optional REPO-ROOT specifies the Git repository's top-level directory."
         (instance-dir
          (or repo-root
              (file-name-directory (or (buffer-file-name) default-directory)))))
-    (if (and copilot-chat--git-commit-instance
-             (copilot-chat-p copilot-chat--git-commit-instance)
-             (eq (copilot-chat-type copilot-chat--git-commit-instance) 'commit))
+    (if (and ai-girlfriend-chat--git-commit-instance
+             (ai-girlfriend-chat-p ai-girlfriend-chat--git-commit-instance)
+             (eq (ai-girlfriend-chat-type ai-girlfriend-chat--git-commit-instance) 'commit))
         (if (equal
-             (copilot-chat-directory copilot-chat--git-commit-instance)
+             (ai-girlfriend-chat-directory ai-girlfriend-chat--git-commit-instance)
              instance-dir)
             (setq recreate-instance nil)
           (progn
-            (copilot-chat--debug
+            (ai-girlfriend-chat--debug
              'commit
              "Commit instance exists for %s, but current context is %s. Recreating."
-             (copilot-chat-directory copilot-chat--git-commit-instance)
+             (ai-girlfriend-chat-directory ai-girlfriend-chat--git-commit-instance)
              instance-dir)
-            (copilot-chat-clear-git-commit-instance)))
+            (ai-girlfriend-chat-clear-git-commit-instance)))
       (setq recreate-instance t))
 
     (when recreate-instance
-      (copilot-chat--debug
+      (ai-girlfriend-chat--debug
        'commit
        "Creating/recreating commit instance for directory: %s"
        instance-dir)
       (let ((instance
-             (copilot-chat--create
-              instance-dir copilot-chat-commit-model 'commit)))
-        (setq copilot-chat--git-commit-instance instance)
-        (unless (memq instance copilot-chat--instances)
-          (push instance copilot-chat--instances))))
-    copilot-chat--git-commit-instance))
+             (ai-girlfriend-chat--create
+              instance-dir ai-girlfriend-chat-commit-model 'commit)))
+        (setq ai-girlfriend-chat--git-commit-instance instance)
+        (unless (memq instance ai-girlfriend-chat--instances)
+          (push instance ai-girlfriend-chat--instances))))
+    ai-girlfriend-chat--git-commit-instance))
 
-(defun copilot-chat--get-git-commit-template-comments ()
+(defun ai-girlfriend-chat--get-git-commit-template-comments ()
   "Extract comments (lines starting with #) from the commit buffer."
   (save-excursion
     (goto-char (point-min))
@@ -288,21 +288,21 @@ Optional REPO-ROOT specifies the Git repository's top-level directory."
       comments)))
 
 (cl-defstruct
- copilot-chat--commit-callback-params
- "Parameters for commit message generation callback.
+    ai-girlfriend-chat--commit-callback-params
+  "Parameters for commit message generation callback.
 All fields are required."
- instance ; The commit instance
- current-buf ; Buffer where commit message will be inserted
- start-pos ; Starting position in current-buf
- accumulated-content ; Accumulated content so far
- template-comments ; Original commit template comments
- wait-prompt ; Temporary prompt shown while generating
- user-prompt-for-this-turn ; The prompt that led to this assistant response
- out-of-context-for-ask) ; Whether copilot-chat--ask was called with out-of-context
+  instance ; The commit instance
+  current-buf ; Buffer where commit message will be inserted
+  start-pos ; Starting position in current-buf
+  accumulated-content ; Accumulated content so far
+  template-comments ; Original commit template comments
+  wait-prompt ; Temporary prompt shown while generating
+  user-prompt-for-this-turn ; The prompt that led to this assistant response
+  out-of-context-for-ask) ; Whether ai-girlfriend-chat--ask was called with out-of-context
 
-(defun copilot-chat--commit-callback (params)
+(defun ai-girlfriend-chat--commit-callback (params)
   "Callback function for handling commit message generation stream.
-PARAMS is a `copilot-chat--commit-callback-params' struct containing:
+PARAMS is a `ai-girlfriend-chat--commit-callback-params' struct containing:
 - instance: The commit instance
 - current-buf: Buffer where the commit message will be inserted
 - start-pos: Starting position in current-buf
@@ -310,157 +310,157 @@ PARAMS is a `copilot-chat--commit-callback-params' struct containing:
 - template-comments: Original commit template comments
 - wait-prompt: Temporary prompt shown while generating
 - user-prompt: The prompt that led to this assistant response
-- out-of-context: Whether `copilot-chat--ask' was called with out-of-context"
+- out-of-context: Whether `ai-girlfriend-chat--ask' was called with out-of-context"
   (lambda (_cb-instance content)
-    (with-current-buffer (copilot-chat--commit-callback-params-current-buf
+    (with-current-buffer (ai-girlfriend-chat--commit-callback-params-current-buf
                           params)
       (save-excursion
-        (if (string= content copilot-chat--magic)
+        (if (string= content ai-girlfriend-chat--magic)
             (progn
-              (copilot-chat--spinner-stop
-               (copilot-chat--commit-callback-params-instance params))
+              (ai-girlfriend-chat--spinner-stop
+               (ai-girlfriend-chat--commit-callback-params-instance params))
               (with-current-buffer
-                  (copilot-chat--commit-callback-params-current-buf params)
+                  (ai-girlfriend-chat--commit-callback-params-current-buf params)
                 (goto-char
-                 (copilot-chat--commit-callback-params-start-pos params))
+                 (ai-girlfriend-chat--commit-callback-params-start-pos params))
                 (when (looking-at
-                       (copilot-chat--commit-callback-params-wait-prompt
+                       (ai-girlfriend-chat--commit-callback-params-wait-prompt
                         params))
                   (delete-region
-                   (copilot-chat--commit-callback-params-start-pos params)
-                   (+ (copilot-chat--commit-callback-params-start-pos params)
+                   (ai-girlfriend-chat--commit-callback-params-start-pos params)
+                   (+ (ai-girlfriend-chat--commit-callback-params-start-pos params)
                       (length
-                       (copilot-chat--commit-callback-params-wait-prompt
+                       (ai-girlfriend-chat--commit-callback-params-wait-prompt
                         params))))))
               (goto-char (point-max))
               (delete-region (point-min) (point-max))
               (insert
-               (copilot-chat--commit-callback-params-accumulated-content params)
+               (ai-girlfriend-chat--commit-callback-params-accumulated-content params)
                "\n\n"
-               (copilot-chat--commit-callback-params-template-comments params))
-              (if (copilot-chat--commit-callback-params-out-of-context-for-ask
+               (ai-girlfriend-chat--commit-callback-params-template-comments params))
+              (if (ai-girlfriend-chat--commit-callback-params-out-of-context-for-ask
                    params)
                   (setf
-                   (copilot-chat-history
-                    (copilot-chat--commit-callback-params-instance params))
+                   (ai-girlfriend-chat-history
+                    (ai-girlfriend-chat--commit-callback-params-instance params))
                    `((:content
-                      ,(copilot-chat--commit-callback-params-accumulated-content
+                      ,(ai-girlfriend-chat--commit-callback-params-accumulated-content
                         params)
                       :role "assistant")
                      (:content
-                      ,(copilot-chat--commit-callback-params-user-prompt-for-this-turn
+                      ,(ai-girlfriend-chat--commit-callback-params-user-prompt-for-this-turn
                         params)
                       :role "user")))
                 (setf
-                 (copilot-chat-history
-                  (copilot-chat--commit-callback-params-instance params))
+                 (ai-girlfriend-chat-history
+                  (ai-girlfriend-chat--commit-callback-params-instance params))
                  (cons
                   `(:content
-                    ,(copilot-chat--commit-callback-params-accumulated-content
+                    ,(ai-girlfriend-chat--commit-callback-params-accumulated-content
                       params)
                     :role "assistant")
-                  (copilot-chat-history
-                   (copilot-chat--commit-callback-params-instance params))))))
+                  (ai-girlfriend-chat-history
+                   (ai-girlfriend-chat--commit-callback-params-instance params))))))
           (progn
             (when (string=
-                   (copilot-chat--commit-callback-params-accumulated-content
+                   (ai-girlfriend-chat--commit-callback-params-accumulated-content
                     params)
                    "")
               (goto-char
-               (copilot-chat--commit-callback-params-start-pos params))
+               (ai-girlfriend-chat--commit-callback-params-start-pos params))
               (when (looking-at
-                     (copilot-chat--commit-callback-params-wait-prompt params))
+                     (ai-girlfriend-chat--commit-callback-params-wait-prompt params))
                 (delete-region
-                 (copilot-chat--commit-callback-params-start-pos params)
-                 (+ (copilot-chat--commit-callback-params-start-pos params)
+                 (ai-girlfriend-chat--commit-callback-params-start-pos params)
+                 (+ (ai-girlfriend-chat--commit-callback-params-start-pos params)
                     (length
-                     (copilot-chat--commit-callback-params-wait-prompt
+                     (ai-girlfriend-chat--commit-callback-params-wait-prompt
                       params))))))
-            (goto-char (copilot-chat--commit-callback-params-start-pos params))
+            (goto-char (ai-girlfriend-chat--commit-callback-params-start-pos params))
             (delete-region
-             (copilot-chat--commit-callback-params-start-pos params)
-             (min (+ (copilot-chat--commit-callback-params-start-pos params)
+             (ai-girlfriend-chat--commit-callback-params-start-pos params)
+             (min (+ (ai-girlfriend-chat--commit-callback-params-start-pos params)
                      (length
-                      (copilot-chat--commit-callback-params-accumulated-content
+                      (ai-girlfriend-chat--commit-callback-params-accumulated-content
                        params)))
                   (point-max)))
-            (setf (copilot-chat--commit-callback-params-accumulated-content
+            (setf (ai-girlfriend-chat--commit-callback-params-accumulated-content
                    params)
                   (concat
-                   (copilot-chat--commit-callback-params-accumulated-content
+                   (ai-girlfriend-chat--commit-callback-params-accumulated-content
                     params)
                    content))
             (insert
-             (copilot-chat--commit-callback-params-accumulated-content
+             (ai-girlfriend-chat--commit-callback-params-accumulated-content
               params))))))))
 
-(defmacro copilot-chat--with-commit-context (&rest body)
+(defmacro ai-girlfriend-chat--with-commit-context (&rest body)
   "Execute BODY with commit-specific context.
-This involves setting `copilot-chat-prompt` to `copilot-chat-commit-prompt`
+This involves setting `ai-girlfriend-chat-prompt` to `ai-girlfriend-chat-commit-prompt`
 and temporarily disabling the org frontend's `create-req-fn` if active."
-  `(let ((copilot-chat-prompt copilot-chat-commit-prompt)
-         (frontend (copilot-chat--get-frontend))
+  `(let ((ai-girlfriend-chat-prompt ai-girlfriend-chat-commit-prompt)
+         (frontend (ai-girlfriend-chat--get-frontend))
          (original-org-create-req-fn nil))
-     (when (and frontend (eq (copilot-chat-frontend-id frontend) 'org))
+     (when (and frontend (eq (ai-girlfriend-chat-frontend-id frontend) 'org))
        (setq original-org-create-req-fn
-             (copilot-chat-frontend-create-req-fn frontend))
-       (setf (copilot-chat-frontend-create-req-fn frontend) nil)
-       (copilot-chat--debug
+             (ai-girlfriend-chat-frontend-create-req-fn frontend))
+       (setf (ai-girlfriend-chat-frontend-create-req-fn frontend) nil)
+       (ai-girlfriend-chat--debug
         'commit "Temporarily disabled org frontend create-req-fn for commit."))
      (unwind-protect
          (progn
            ,@body)
        (when original-org-create-req-fn
-         (setf (copilot-chat-frontend-create-req-fn frontend)
+         (setf (ai-girlfriend-chat-frontend-create-req-fn frontend)
                original-org-create-req-fn)))))
 
-;;;###autoload (autoload 'copilot-chat-insert-commit-message-when-ready "copilot-chat" nil t)
-(defun copilot-chat-insert-commit-message-when-ready ()
+;;;###autoload (autoload 'ai-girlfriend-chat-insert-commit-message-when-ready "ai-girlfriend-chat" nil t)
+(defun ai-girlfriend-chat-insert-commit-message-when-ready ()
   "Generate and insert a commit message using GitHub Copilot."
   (interactive)
   (when buffer-read-only
     (signal
      'buffer-read-only (format "Buffer `%s' is read-only" (buffer-name))))
   (aio-with-async
-   (let* ((instance (copilot-chat--ensure-commit-instance))
+   (let* ((instance (ai-girlfriend-chat--ensure-commit-instance))
           (current-buf (current-buffer))
           (start-pos (point))
-          (diff-content (aio-await (copilot-chat--get-diff-content)))
-          (template-comments (copilot-chat--get-git-commit-template-comments))
+          (diff-content (aio-await (ai-girlfriend-chat--get-diff-content)))
+          (template-comments (ai-girlfriend-chat--get-git-commit-template-comments))
           (wait-prompt
-           (format copilot-chat-git-wait-message-format
-                   (copilot-chat-model instance)))
+           (format ai-girlfriend-chat-git-wait-message-format
+                   (ai-girlfriend-chat-model instance)))
           (accumulated-content ""))
 
-     (setf (copilot-chat-history instance) nil)
-     (copilot-chat--debug
+     (setf (ai-girlfriend-chat-history instance) nil)
+     (ai-girlfriend-chat--debug
       'commit "Commit instance history cleared for new generation.")
-     (copilot-chat--debug 'commit "Starting initial commit message generation.")
-     (copilot-chat--debug
+     (ai-girlfriend-chat--debug 'commit "Starting initial commit message generation.")
+     (ai-girlfriend-chat--debug
       'commit "Diff content size: %d bytes, Model: %s"
       (if diff-content
           (length diff-content)
         0)
-      (copilot-chat-model instance))
+      (ai-girlfriend-chat-model instance))
 
      (cond
       ((or (null diff-content) (string-empty-p diff-content))
-       (copilot-chat--debug 'commit "No changes found in staging area.")
+       (ai-girlfriend-chat--debug 'commit "No changes found in staging area.")
        (user-error
         "No staged changes found or diff content is empty.  Please stage some changes first"))
       (t
        (message "Generating commit message...")
        (insert wait-prompt "\n\n")
        (goto-char start-pos)
-       (copilot-chat--debug
+       (ai-girlfriend-chat--debug
         'commit "User diff content to be sent:\n%s" diff-content)
 
        (condition-case err
-           (copilot-chat--with-commit-context
-            (copilot-chat--ask
+           (ai-girlfriend-chat--with-commit-context
+            (ai-girlfriend-chat--ask
              instance diff-content
-             (copilot-chat--commit-callback
-              (make-copilot-chat--commit-callback-params
+             (ai-girlfriend-chat--commit-callback
+              (make-ai-girlfriend-chat--commit-callback-params
                :instance instance
                :current-buf current-buf
                :start-pos start-pos
@@ -471,26 +471,26 @@ and temporarily disabling the org frontend's `create-req-fn` if active."
                :out-of-context-for-ask t))
              t))
          (error
-          (copilot-chat--spinner-stop instance)
+          (ai-girlfriend-chat--spinner-stop instance)
           (signal (car err) (cdr err)))))))))
 
-;;;###autoload (autoload 'copilot-chat-insert-commit-message "copilot-chat" nil t)
-(defun copilot-chat-insert-commit-message ()
+;;;###autoload (autoload 'ai-girlfriend-chat-insert-commit-message "ai-girlfriend-chat" nil t)
+(defun ai-girlfriend-chat-insert-commit-message ()
   "Generate and insert a commit message using Copilot.
 Uses the current staged changes in git to
 generate an appropriate commit message.
 Requires the repository to have staged changes.
 This function is expected to be safe to open via magit when added to
 `git-commit-setup-hook'.
-Unlike `copilot-chat-insert-commit-message-when-ready', this function
+Unlike `ai-girlfriend-chat-insert-commit-message-when-ready', this function
 delays invocation by 1 second to allow the buffer to be fully initialized."
   (interactive)
   ;;TODO: I really don't want to do anything delayed by time,
   ;; but I had to in order to make it work anyway.
   ;; In fact, we would like to get rid of this kind of messy control.
-  (run-with-timer 1 nil #'copilot-chat-insert-commit-message-when-ready))
+  (run-with-timer 1 nil #'ai-girlfriend-chat-insert-commit-message-when-ready))
 
-(defun copilot-chat--commit-buffer-has-message-p ()
+(defun ai-girlfriend-chat--commit-buffer-has-message-p ()
   "Return non-nil if the current buffer has a non-comment, non-empty line.
 Lines starting with `#' (git comment lines) and blank lines are ignored.
 Content after the scissor line (`# --- >8 ---') is also ignored,
@@ -513,38 +513,38 @@ as it contains the verbose diff from `git commit -v'."
           (forward-line 1))
         nil))))
 
-;;;###autoload (autoload 'copilot-chat-insert-commit-message-no-clobber "copilot-chat" nil t)
-(defun copilot-chat-insert-commit-message-no-clobber ()
+;;;###autoload (autoload 'ai-girlfriend-chat-insert-commit-message-no-clobber "ai-girlfriend-chat" nil t)
+(defun ai-girlfriend-chat-insert-commit-message-no-clobber ()
   "Generate commit message, but if has no existing message.
-Like `copilot-chat-insert-commit-message',
+Like `ai-girlfriend-chat-insert-commit-message',
 but skip generation
 if the commit buffer already contains a non-comment, non-blank line.
 This is useful for `git-commit-setup-hook'
 to avoid overwriting existing messages during
 amend, rebase, or squash operations."
   (interactive)
-  (if (copilot-chat--commit-buffer-has-message-p)
+  (if (ai-girlfriend-chat--commit-buffer-has-message-p)
       (message "Commit buffer already has a message, skipping generation.")
-    (copilot-chat-insert-commit-message)))
+    (ai-girlfriend-chat-insert-commit-message)))
 
-;;;###autoload (autoload 'copilot-chat-regenerate-commit-message "copilot-chat" nil t)
-(defun copilot-chat-regenerate-commit-message ()
+;;;###autoload (autoload 'ai-girlfriend-chat-regenerate-commit-message "ai-girlfriend-chat" nil t)
+(defun ai-girlfriend-chat-regenerate-commit-message ()
   "Regenerate and insert a new commit message using GitHub Copilot."
   (interactive)
   (aio-with-async
-   (let* ((instance (copilot-chat--ensure-commit-instance))
+   (let* ((instance (ai-girlfriend-chat--ensure-commit-instance))
           (current-buf (current-buffer))
           (start-pos (point))
-          (template-comments (copilot-chat--get-git-commit-template-comments))
+          (template-comments (ai-girlfriend-chat--get-git-commit-template-comments))
           (additional-instructions "")
           (wait-prompt "")
           (accumulated-content ""))
 
-     (unless (copilot-chat-history instance)
+     (unless (ai-girlfriend-chat-history instance)
        (message
-        "No previous commit message generated in this session. Calling 'copilot-chat-insert-commit-message'.")
-       (copilot-chat-insert-commit-message)
-       (cl-return-from copilot-chat-regenerate-commit-message))
+        "No previous commit message generated in this session. Calling 'ai-girlfriend-chat-insert-commit-message'.")
+       (ai-girlfriend-chat-insert-commit-message)
+       (cl-return-from ai-girlfriend-chat-regenerate-commit-message))
 
      (setq
       additional-instructions
@@ -556,26 +556,26 @@ amend, rebase, or squash operations."
             "Please regenerate a new one, taking the previous attempt and my request into account."
           instr)))
      (setq wait-prompt
-           (format copilot-chat-git-regenerate-wait-message-format
-                   (copilot-chat-model instance)))
-     (copilot-chat--debug 'commit "Starting commit message regeneration.")
-     (copilot-chat--debug
+           (format ai-girlfriend-chat-git-regenerate-wait-message-format
+                   (ai-girlfriend-chat-model instance)))
+     (ai-girlfriend-chat--debug 'commit "Starting commit message regeneration.")
+     (ai-girlfriend-chat--debug
       'commit "Additional instructions: %s" additional-instructions)
-     (copilot-chat--debug
+     (ai-girlfriend-chat--debug
       'commit
       "Current history for regeneration: %S"
-      (copilot-chat-history instance))
+      (ai-girlfriend-chat-history instance))
 
      (message "Regenerating commit message...")
      (insert wait-prompt "\n\n")
      (goto-char start-pos)
 
      (condition-case err
-         (copilot-chat--with-commit-context
-          (copilot-chat--ask
+         (ai-girlfriend-chat--with-commit-context
+          (ai-girlfriend-chat--ask
            instance additional-instructions
-           (copilot-chat--commit-callback
-            (make-copilot-chat--commit-callback-params
+           (ai-girlfriend-chat--commit-callback
+            (make-ai-girlfriend-chat--commit-callback-params
              :instance instance
              :current-buf current-buf
              :start-pos start-pos
@@ -586,27 +586,27 @@ amend, rebase, or squash operations."
              :out-of-context-for-ask nil))
            nil))
        (error
-        (copilot-chat--spinner-stop instance)
+        (ai-girlfriend-chat--spinner-stop instance)
         (signal (car err) (cdr err)))))))
 
 ;;;###autoload
-(defun copilot-chat-clear-git-commit-instance ()
+(defun ai-girlfriend-chat-clear-git-commit-instance ()
   "Clear and remove the persistent Git commit instance."
   (interactive)
-  (when copilot-chat--git-commit-instance
-    (copilot-chat--debug 'commit "Clearing persistent Git commit instance.")
-    (setq copilot-chat--instances
-          (delq copilot-chat--git-commit-instance copilot-chat--instances))
-    (when (copilot-chat-spinner-timer copilot-chat--git-commit-instance)
+  (when ai-girlfriend-chat--git-commit-instance
+    (ai-girlfriend-chat--debug 'commit "Clearing persistent Git commit instance.")
+    (setq ai-girlfriend-chat--instances
+          (delq ai-girlfriend-chat--git-commit-instance ai-girlfriend-chat--instances))
+    (when (ai-girlfriend-chat-spinner-timer ai-girlfriend-chat--git-commit-instance)
       (cancel-timer
-       (copilot-chat-spinner-timer copilot-chat--git-commit-instance)))
-    (setq copilot-chat--git-commit-instance nil)
+       (ai-girlfriend-chat-spinner-timer ai-girlfriend-chat--git-commit-instance)))
+    (setq ai-girlfriend-chat--git-commit-instance nil)
     (message "Persistent Git commit instance cleared."))
-  (unless copilot-chat--git-commit-instance
+  (unless ai-girlfriend-chat--git-commit-instance
     (message "No active persistent Git commit instance to clear.")))
 
-(provide 'copilot-chat-git)
-;;; copilot-chat-git.el ends here
+(provide 'ai-girlfriend-chat-git)
+;;; ai-girlfriend-chat-git.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

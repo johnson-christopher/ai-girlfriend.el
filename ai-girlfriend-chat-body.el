@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-body.el --- create request body for copilot -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-body.el --- create request body for copilot -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -29,30 +29,30 @@
 (require 'cl-lib)
 (require 'image)
 
-(require 'copilot-chat-frontend)
-(require 'copilot-chat-instance)
-(require 'copilot-chat-model)
-(require 'copilot-chat-prompts)
-(require 'copilot-chat-mcp)
+(require 'ai-girlfriend-chat-frontend)
+(require 'ai-girlfriend-chat-instance)
+(require 'ai-girlfriend-chat-model)
+(require 'ai-girlfriend-chat-prompts)
+(require 'ai-girlfriend-chat-mcp)
 
-(defcustom copilot-chat-use-copilot-instruction-files t
+(defcustom ai-girlfriend-chat-use-copilot-instruction-files t
   "Use custom instructions from `.github/copilot-instructions.md'."
   :type 'boolean
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-use-git-commit-instruction-files t
+(defcustom ai-girlfriend-chat-use-git-commit-instruction-files t
   "Use custom git commit instructions from `.github/git-commit-instructions.md'."
   :type 'boolean
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-max-instruction-size 65536
+(defcustom ai-girlfriend-chat-max-instruction-size 65536
   "Maximum size in bytes of instruction files."
   :type '(choice (const :tag "Unlimited" nil) integer)
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defun copilot-chat--read-instruction-file (file-name)
+(defun ai-girlfriend-chat--read-instruction-file (file-name)
   "Return the content of instruction file FILE-NAME or nil.
-If the file is larger than `copilot-chat-max-instruction-size',
+If the file is larger than `ai-girlfriend-chat-max-instruction-size',
 ignore it and emit a message."
   (let* ((starting-path (or buffer-file-name default-directory))
          (github-dir (locate-dominating-file starting-path ".github"))
@@ -61,28 +61,28 @@ ignore it and emit a message."
                (expand-file-name (concat ".github/" file-name) github-dir))))
     (when (and instruction-file (file-readable-p instruction-file))
       ;; Skip the file if it exceeds the configured size limit.
-      (when (and copilot-chat-max-instruction-size
+      (when (and ai-girlfriend-chat-max-instruction-size
                  (> (file-attribute-size (file-attributes instruction-file))
-                    copilot-chat-max-instruction-size))
-        (message "[copilot-chat] `%s` is larger than %d bytes; ignored."
+                    ai-girlfriend-chat-max-instruction-size))
+        (message "[ai-girlfriend-chat] `%s` is larger than %d bytes; ignored."
                  instruction-file
-                 copilot-chat-max-instruction-size)
-        (cl-return-from copilot-chat--read-instruction-file nil))
+                 ai-girlfriend-chat-max-instruction-size)
+        (cl-return-from ai-girlfriend-chat--read-instruction-file nil))
       (with-temp-buffer
         (insert-file-contents instruction-file)
         (buffer-string)))))
 
-(defun copilot-chat--read-copilot-instructions-file ()
+(defun ai-girlfriend-chat--read-copilot-instructions-file ()
   "Return the content of `.github/copilot-instructions.md' or nil."
-  (when copilot-chat-use-copilot-instruction-files
-    (copilot-chat--read-instruction-file "copilot-instructions.md")))
+  (when ai-girlfriend-chat-use-copilot-instruction-files
+    (ai-girlfriend-chat--read-instruction-file "copilot-instructions.md")))
 
-(defun copilot-chat--read-git-commit-instructions-file ()
+(defun ai-girlfriend-chat--read-git-commit-instructions-file ()
   "Return the content of `.github/git-commit-instructions.md' or nil."
-  (when copilot-chat-use-git-commit-instruction-files
-    (copilot-chat--read-instruction-file "git-commit-instructions.md")))
+  (when ai-girlfriend-chat-use-git-commit-instruction-files
+    (ai-girlfriend-chat--read-instruction-file "git-commit-instructions.md")))
 
-(defun copilot-chat--format-copilot-instructions (instruction-content)
+(defun ai-girlfriend-chat--format-copilot-instructions (instruction-content)
   "Format instruction content according to Copilot's expected format.
 INSTRUCTION-CONTENT is the content read from the instructions file."
   (when instruction-content
@@ -93,16 +93,16 @@ INSTRUCTION-CONTENT is the content read from the instructions file."
      instruction-content
      "\n</instructions>")))
 
-(defun copilot-chat--format-buffer-for-copilot (buffer instance)
+(defun ai-girlfriend-chat--format-buffer-for-copilot (buffer instance)
   "Format BUFFER content for Copilot with metadata to improve understanding.
-INSTANCE is the `copilot-chat' instance being used."
+INSTANCE is the `ai-girlfriend-chat' instance being used."
   (let ((format-buffer-fn
-         (copilot-chat-frontend-format-buffer-fn (copilot-chat--get-frontend))))
+         (ai-girlfriend-chat-frontend-format-buffer-fn (ai-girlfriend-chat--get-frontend))))
     (if format-buffer-fn
         (funcall format-buffer-fn buffer instance)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
-(defun copilot-chat--image-to-base64 (file)
+(defun ai-girlfriend-chat--image-to-base64 (file)
   "Convert an image FILE to a base64 encoded string with MIME type."
   (let ((mime-type
          (or (mailcap-file-name-to-mime-type file) "application/octet-stream")))
@@ -111,16 +111,16 @@ INSTANCE is the `copilot-chat' instance being used."
       (base64-encode-region (point-min) (point-max) t)
       (concat "data:" mime-type ";base64," (buffer-string)))))
 
-(defun copilot-chat--add-buffer-to-req (buffer instance messages)
+(defun ai-girlfriend-chat--add-buffer-to-req (buffer instance messages)
   "Add BUFFER content to MESSAGES.
-INSTANCE is the `copilot-chat' instance being used."
+INSTANCE is the `ai-girlfriend-chat' instance being used."
   (when (buffer-live-p buffer)
     (let ((filename (buffer-file-name buffer)))
       (if (and filename
-               (copilot-chat--instance-support-vision instance)
+               (ai-girlfriend-chat--instance-support-vision instance)
                (image-supported-file-p filename))
           (progn
-            (setf (copilot-chat-uses-vision instance) t)
+            (setf (ai-girlfriend-chat-uses-vision instance) t)
             (push (list
                    `(content
                      .
@@ -135,18 +135,18 @@ INSTANCE is the `copilot-chat' instance being used."
                            ,(list
                              `(url
                                .
-                               ,(copilot-chat--image-to-base64 filename))))))))
+                               ,(ai-girlfriend-chat--image-to-base64 filename))))))))
                    `(role . "user"))
                   messages))
         (push (list
                `(content
-                 . ,(copilot-chat--format-buffer-for-copilot buffer instance))
+                 . ,(ai-girlfriend-chat--format-buffer-for-copilot buffer instance))
                `(role . "user"))
               messages))))
   messages)
 
-(provide 'copilot-chat-body)
-;;; copilot-chat-body.el ends here
+(provide 'ai-girlfriend-chat-body)
+;;; ai-girlfriend-chat-body.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

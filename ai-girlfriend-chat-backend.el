@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-backend.el --- define copilot backend interface -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-backend.el --- define copilot backend interface -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -30,39 +30,39 @@
 (require 'cl-lib)
 
 ;; Forward declaration of custom variables
-(defvar copilot-chat-backend)
+(defvar ai-girlfriend-chat-backend)
 
 ;; Struct
 (cl-defstruct
- copilot-chat-backend
- "Struct for Copilot chat backend."
- id
- init-fn
- clean-fn
- login-fn
- renew-token-fn
- ask-fn
- cancel-fn
- quotas-fn)
+    ai-girlfriend-chat-backend
+  "Struct for Copilot chat backend."
+  id
+  init-fn
+  clean-fn
+  login-fn
+  renew-token-fn
+  ask-fn
+  cancel-fn
+  quotas-fn)
 
-(cl-declaim (type (list-of copilot-chat-backend) copilot-chat--backend-list))
+(cl-declaim (type (list-of ai-girlfriend-chat-backend) ai-girlfriend-chat--backend-list))
 
-(defvar copilot-chat--backend-list '()
-  "Copilot-chat backends and functions list.
-Each element must be a `copilot-chat-backend' struct instance.
+(defvar ai-girlfriend-chat--backend-list '()
+  "ai-girlfriend-chat backends and functions list.
+Each element must be a `ai-girlfriend-chat-backend' struct instance.
 Elements are added in the module that defines each backend.")
 
-(defun copilot-chat--get-backend ()
+(defun ai-girlfriend-chat--get-backend ()
   "Get backend from custom."
   (cl-find
-   copilot-chat-backend
-   copilot-chat--backend-list
-   :key #'copilot-chat-backend-id
+   ai-girlfriend-chat-backend
+   ai-girlfriend-chat--backend-list
+   :key #'ai-girlfriend-chat-backend-id
    :test #'eq))
 
 
-(provide 'copilot-chat-backend)
-;;; copilot-chat-backend.el ends here
+(provide 'ai-girlfriend-chat-backend)
+;;; ai-girlfriend-chat-backend.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

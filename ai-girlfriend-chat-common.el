@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-common.el --- copilot chat variables and const -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-common.el --- copilot chat variables and const -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -30,32 +30,32 @@
 (require 'cl-lib)
 
 ;; constants
-(defconst copilot-chat--magic "#cc#done#!$")
-(defconst copilot-chat--buffer-name "*Copilot Chat*"
+(defconst ai-girlfriend-chat--magic "#cc#done#!$")
+(defconst ai-girlfriend-chat--buffer-name "*Copilot Chat*"
   "Name of the Copilot Chat buffer.")
 
 ;; customs
-(defgroup copilot-chat nil
+(defgroup ai-girlfriend-chat nil
   "GitHub Copilot chat."
   :group 'tools)
 
-(defcustom copilot-chat-follow nil
+(defcustom ai-girlfriend-chat-follow nil
   "Follow the chat buffer."
   :type 'boolean
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-github-token-file "~/.config/github-copilot/apps.json"
+(defcustom ai-girlfriend-chat-github-token-file "~/.config/github-copilot/apps.json"
   "The file where to find GitHub token."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-token-cache "~/.cache/copilot-chat/token"
+(defcustom ai-girlfriend-chat-token-cache "~/.cache/ai-girlfriend-chat/token"
   "The file where the GitHub token is cached."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend-chat)
 
 ;; Functions
-(defun copilot-chat--uuid ()
+(defun ai-girlfriend-chat--uuid ()
   "Generate a UUID."
   (format "%04x%04x-%04x-4%03x-%04x-%04x%04x%04x"
           (random 65536)
@@ -67,7 +67,7 @@
           (random 65536)
           (random 65536)))
 
-(defun copilot-chat--machine-id ()
+(defun ai-girlfriend-chat--machine-id ()
   "Generate a machine ID."
   (let ((hex-chars "0123456789abcdef")
         (length 65)
@@ -76,12 +76,12 @@
       (setq hex (concat hex (string (aref hex-chars (random 16))))))
     hex))
 
-(defun copilot-chat--get-buffer-name (directory)
+(defun ai-girlfriend-chat--get-buffer-name (directory)
   "Get the corresponding chat buffer name for DIRECTORY."
   (format "*Copilot Chat [%s]*" directory))
 
-(provide 'copilot-chat-common)
-;;; copilot-chat-common.el ends here
+(provide 'ai-girlfriend-chat-common)
+;;; ai-girlfriend-chat-common.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

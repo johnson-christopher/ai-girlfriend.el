@@ -1,10 +1,10 @@
-;;; copilot-chat.el --- Copilot chat interface -*- lexical-binding: t -*-
+;;; ai-girlfriend-chat.el --- Copilot chat interface -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; Author: cedric.chepied <cedric.chepied@gmail.com>
 ;; Version: 4.0.0
-;; URL: https://github.com/chep/copilot-chat.el
+;; URL: https://github.com/chep/ai-girlfriend-chat.el
 ;; Package-Requires: ((emacs "30.1") (aio "1.0") (request "0.3.2") (transient "0.8.3") (polymode "0.2.2") (org "9.4.6") (markdown-mode "2.6") (shell-maker "0.76.2") (mcp "0.1.0"))
 ;; Keywords: convenience, tools
 
@@ -36,24 +36,24 @@
 ;;; Code:
 
 ;; All modules are loaded at the top level except those that are loaded lazily or for development.
-;; Lazy-loaded stuff is `copilot-chat-markdown', `copilot-chat-org', `copilot-chat-shell-maker'.
-(require 'copilot-chat-body)
-(require 'copilot-chat-command)
-(require 'copilot-chat-common)
-(require 'copilot-chat-connection)
-(require 'copilot-chat-copilot)
-(require 'copilot-chat-frontend)
-(require 'copilot-chat-backend)
-(require 'copilot-chat-git)
-(require 'copilot-chat-instance)
-(require 'copilot-chat-model)
-(require 'copilot-chat-prompts)
-(require 'copilot-chat-prompt-mode)
-(require 'copilot-chat-spinner)
-(require 'copilot-chat-transient)
+;; Lazy-loaded stuff is `ai-girlfriend-chat-markdown', `ai-girlfriend-chat-org', `ai-girlfriend-chat-shell-maker'.
+(require 'ai-girlfriend-chat-body)
+(require 'ai-girlfriend-chat-command)
+(require 'ai-girlfriend-chat-common)
+(require 'ai-girlfriend-chat-connection)
+(require 'ai-girlfriend-chat-copilot)
+(require 'ai-girlfriend-chat-frontend)
+(require 'ai-girlfriend-chat-backend)
+(require 'ai-girlfriend-chat-git)
+(require 'ai-girlfriend-chat-instance)
+(require 'ai-girlfriend-chat-model)
+(require 'ai-girlfriend-chat-prompts)
+(require 'ai-girlfriend-chat-prompt-mode)
+(require 'ai-girlfriend-chat-spinner)
+(require 'ai-girlfriend-chat-transient)
 
-(defcustom copilot-chat-frontend 'org
-  "Frontend to use with `copilot-chat'.  Can be org, markdown or shell-maker."
+(defcustom ai-girlfriend-chat-frontend 'org
+  "Frontend to use with `ai-girlfriend-chat'.  Can be org, markdown or shell-maker."
   :type
   '(choice
     (const :tag "org-mode" org)
@@ -63,23 +63,23 @@
   (lambda (symbol value)
     (set-default-toplevel-value symbol value)
     (pcase value
-      (`org (require 'copilot-chat-org))
-      (`markdown (require 'copilot-chat-markdown))
-      (`shell-maker (require 'copilot-chat-shell-maker))))
-  :group 'copilot-chat)
+      (`org (require 'ai-girlfriend-chat-org))
+      (`markdown (require 'ai-girlfriend-chat-markdown))
+      (`shell-maker (require 'ai-girlfriend-chat-shell-maker))))
+  :group 'ai-girlfriend-chat)
 
-(defcustom copilot-chat-backend 'curl
+(defcustom ai-girlfriend-chat-backend 'curl
   "Copilot chat backend.  Can be `curl` or a custom on."
   :type '(choice (const :tag "curl" curl) (const :tag "request" request))
   :set
   (lambda (symbol value)
     (set-default-toplevel-value symbol value)
     (pcase value
-      (`curl (require 'copilot-chat-curl))))
-  :group 'copilot-chat)
+      (`curl (require 'ai-girlfriend-chat-curl))))
+  :group 'ai-girlfriend-chat)
 
-(provide 'copilot-chat)
-;;; copilot-chat.el ends here
+(provide 'ai-girlfriend-chat)
+;;; ai-girlfriend-chat.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

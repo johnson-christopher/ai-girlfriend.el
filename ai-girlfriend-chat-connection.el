@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-connection.el --- copilot chat connection -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-connection.el --- copilot chat connection -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -29,24 +29,24 @@
 (require 'cl-lib)
 
 (cl-defstruct
- (copilot-chat-connection
-  (:constructor copilot-chat-connection--make) (:copier nil))
- "Struct for Copilot connection information."
- (ready nil :type boolean)
- (github-token nil :type (or null string))
- (token nil)
- (sessionid nil :type (or null string))
- (machineid nil :type (or null string))
- (models nil :type list)
- (last-models-fetch-time 0 :type number))
+    (ai-girlfriend-chat-connection
+     (:constructor ai-girlfriend-chat-connection--make) (:copier nil))
+  "Struct for Copilot connection information."
+  (ready nil :type boolean)
+  (github-token nil :type (or null string))
+  (token nil)
+  (sessionid nil :type (or null string))
+  (machineid nil :type (or null string))
+  (models nil :type list)
+  (last-models-fetch-time 0 :type number))
 
-(defvar copilot-chat--connection (copilot-chat-connection--make)
+(defvar ai-girlfriend-chat--connection (ai-girlfriend-chat-connection--make)
   "Connection information for Copilot chat.")
 
-(cl-declaim (type copilot-chat-connection copilot-chat--connection))
+(cl-declaim (type ai-girlfriend-chat-connection ai-girlfriend-chat--connection))
 
-(provide 'copilot-chat-connection)
-;;; copilot-chat-connection.el ends here
+(provide 'ai-girlfriend-chat-connection)
+;;; ai-girlfriend-chat-connection.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

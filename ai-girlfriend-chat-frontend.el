@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-frontend.el --- define copilot frontend interface -*- lexical-binding: t; -*-
+;;; ai-girlfriend-chat --- ai-girlfriend-chat-frontend.el --- define copilot frontend interface -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend-chat maintainers
 
 ;; The MIT License (MIT)
 
@@ -28,59 +28,59 @@
 
 (require 'cl-lib)
 
-(defvar copilot-chat-frontend)
+(defvar ai-girlfriend-chat-frontend)
 
 (cl-defstruct
- copilot-chat-frontend
- id
- init-fn
- clean-fn
- instance-init-fn
- instance-clean-fn
- save-fn
- load-fn
- format-fn
- format-code-fn
- format-buffer-fn
- create-req-fn
- send-to-buffer-fn
- copy-fn
- yank-fn
- write-fn
- get-buffer-fn
- insert-prompt-fn
- pop-prompt-fn
- goto-input-fn
- get-spinner-buffers-fn)
+    ai-girlfriend-chat-frontend
+  id
+  init-fn
+  clean-fn
+  instance-init-fn
+  instance-clean-fn
+  save-fn
+  load-fn
+  format-fn
+  format-code-fn
+  format-buffer-fn
+  create-req-fn
+  send-to-buffer-fn
+  copy-fn
+  yank-fn
+  write-fn
+  get-buffer-fn
+  insert-prompt-fn
+  pop-prompt-fn
+  goto-input-fn
+  get-spinner-buffers-fn)
 
-(defvar copilot-chat--frontend-list '()
-  "Copilot-chat frontends and functions list.
-Each element must be a `copilot-chat-frontend' struct instance.
+(defvar ai-girlfriend-chat--frontend-list '()
+  "ai-girlfriend-chat frontends and functions list.
+Each element must be a `ai-girlfriend-chat-frontend' struct instance.
 Elements are added in the module that defines each front end.")
 
-(defvar copilot-chat--frontend-init-p nil
+(defvar ai-girlfriend-chat--frontend-init-p nil
   "Flag to indicate if the frontend has been initialized.")
 
-(cl-declaim (type (list-of copilot-chat-frontend) copilot-chat--frontend-list))
+(cl-declaim (type (list-of ai-girlfriend-chat-frontend) ai-girlfriend-chat--frontend-list))
 
-(defun copilot-chat--get-frontend ()
+(defun ai-girlfriend-chat--get-frontend ()
   "Get frontend from custom."
   (cl-find
-   copilot-chat-frontend
-   copilot-chat--frontend-list
-   :key #'copilot-chat-frontend-id
+   ai-girlfriend-chat-frontend
+   ai-girlfriend-chat--frontend-list
+   :key #'ai-girlfriend-chat-frontend-id
    :test #'eq))
 
-(defun copilot-chat--get-buffer (instance)
+(defun ai-girlfriend-chat--get-buffer (instance)
   "Get Copilot Chat buffer from the active frontend.
 Argument INSTANCE is the copilot chat instance to get the buffer for."
   (let ((get-buffer-fn
-         (copilot-chat-frontend-get-buffer-fn (copilot-chat--get-frontend))))
+         (ai-girlfriend-chat-frontend-get-buffer-fn (ai-girlfriend-chat--get-frontend))))
     (when get-buffer-fn
       (funcall get-buffer-fn instance))))
 
-(provide 'copilot-chat-frontend)
-;;; copilot-chat-frontend.el ends here
+(provide 'ai-girlfriend-chat-frontend)
+;;; ai-girlfriend-chat-frontend.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

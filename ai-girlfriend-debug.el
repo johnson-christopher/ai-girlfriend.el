@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-debug.el --- copilot chat for debug -*- lexical-binding: t; -*-
+;;; ai-girlfriend --- ai-girlfriend-debug.el --- copilot chat for debug -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend maintainers
 
 ;; The MIT License (MIT)
 
@@ -26,22 +26,22 @@
 
 ;;; Code:
 
-(defcustom copilot-chat-debug nil
+(defcustom ai-girlfriend-debug nil
   "When non-nil, show debug information for API requests."
   :type 'boolean
-  :group 'copilot-chat)
+  :group 'ai-girlfriend)
 
-(defun copilot-chat--debug (category format-string &rest args)
-  "Print debug message when `copilot-chat-debug' is enabled.
+(defun ai-girlfriend--debug (category format-string &rest args)
+  "Print debug message when `ai-girlfriend-debug' is enabled.
 
 CATEGORY is a symbol indicating the message category.
 For example, `'commit', `'model', `'auth'.
 FORMAT-STRING is the format string passed to `message'.
 ARGS are the arguments to be formatted according to FORMAT-STRING.
 
-The message is prefixed with '[copilot-chat:CATEGORY]' for easy identification.
-No message is printed if `copilot-chat-debug' is nil."
-  (when copilot-chat-debug
+The message is prefixed with '[ai-girlfriend:CATEGORY]' for easy identification.
+No message is printed if `ai-girlfriend-debug' is nil."
+  (when ai-girlfriend-debug
     (unless (symbolp category)
       (signal 'wrong-type-argument (list 'symbolp category)))
     (unless (stringp format-string)
@@ -52,10 +52,10 @@ No message is printed if `copilot-chat-debug' is nil."
              (error
               (message "Error formatting debug message: %S" err)
               (format "Error formatting message with args: %S" args)))))
-      (message "[copilot-chat:%s] %s" category formatted-msg))))
+      (message "[ai-girlfriend:%s] %s" category formatted-msg))))
 
-(provide 'copilot-chat-debug)
-;;; copilot-chat-debug.el ends here
+(provide 'ai-girlfriend-debug)
+;;; ai-girlfriend-debug.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

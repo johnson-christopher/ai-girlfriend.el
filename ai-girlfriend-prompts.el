@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-prompts.el --- copilot chat prompts -*- lexical-binding: t; -*-
+;;; ai-girlfriend --- ai-girlfriend-prompts.el --- copilot chat prompts -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend maintainers
 
 ;; The MIT License (MIT)
 
@@ -26,7 +26,7 @@
 
 
 ;;; Code:
-(defcustom copilot-chat-commit-prompt
+(defcustom ai-girlfriend-commit-prompt
   "You are a commit message generator.
 Your ONLY task is to produce a Git commit message.
 Your task is to generate a single Git commit message that **strictly follows the Conventional Commits v1.0.0 Specification**.
@@ -184,14 +184,14 @@ Refs: #123
 "
   "The prompt used to generate a commit message."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend)
 
-(defcustom copilot-chat-markdown-prompt ""
+(defcustom ai-girlfriend-markdown-prompt ""
   "The prompt to use for Copilot chat."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend)
 
-(defcustom copilot-chat-org-prompt
+(defcustom ai-girlfriend-org-prompt
   "The user works in an IDE called Emacs which has an org major mode for keeping notes, authoring documents, computational notebooks, literate programming, maintaining to-do lists, planning projects, and more — in a fast and effective plain text system.
 
 Use only Emacs org-mode formatting in your answers.
@@ -207,13 +207,13 @@ Avoid wrapping the whole response in the block code.
 Don't forget the most important rule when you are formatting your response: use emacs org-mode syntax only."
   "The prompt used for org frontend."
   :type 'string
-  :group 'copilot-chat)
+  :group 'ai-girlfriend)
 
-(defvar copilot-chat-prompt ""
+(defvar ai-girlfriend-prompt ""
   "The prompt to use for Copilot chat.")
 
-(provide 'copilot-chat-prompts)
-;;; copilot-chat-prompts.el ends here
+(provide 'ai-girlfriend-prompts)
+;;; ai-girlfriend-prompts.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

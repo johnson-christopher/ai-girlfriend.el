@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-prompt-mode.el --- copilot chat prompt mode -*- lexical-binding: t; -*-
+;;; ai-girlfriend --- ai-girlfriend-prompt-mode.el --- copilot chat prompt mode -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend maintainers
 
 ;; The MIT License (MIT)
 
@@ -26,35 +26,35 @@
 
 ;;; Code:
 
-(require 'copilot-chat-common)
-(require 'copilot-chat-spinner)
+(require 'ai-girlfriend-common)
+(require 'ai-girlfriend-spinner)
 
-(defvar copilot-chat-prompt-mode-map
+(defvar ai-girlfriend-prompt-mode-map
   (let ((map (make-keymap)))
-    (define-key map (kbd "C-c RET") 'copilot-chat-prompt-send)
-    (define-key map (kbd "C-c C-c") 'copilot-chat-prompt-send)
+    (define-key map (kbd "C-c RET") 'ai-girlfriend-prompt-send)
+    (define-key map (kbd "C-c C-c") 'ai-girlfriend-prompt-send)
     (define-key
      map (kbd "C-c C-q")
      (lambda ()
        (interactive)
        (bury-buffer)
        (delete-window)))
-    (define-key map (kbd "C-c C-l") 'copilot-chat-prompt-split-and-list)
-    (define-key map (kbd "C-c C-t") 'copilot-chat-transient)
-    (define-key map (kbd "M-p") 'copilot-chat-prompt-history-previous)
-    (define-key map (kbd "M-n") 'copilot-chat-prompt-history-next)
+    (define-key map (kbd "C-c C-l") 'ai-girlfriend-prompt-split-and-list)
+    (define-key map (kbd "C-c C-t") 'ai-girlfriend-transient)
+    (define-key map (kbd "M-p") 'ai-girlfriend-prompt-history-previous)
+    (define-key map (kbd "M-n") 'ai-girlfriend-prompt-history-next)
     map)
   "Keymap for Copilot Chat Prompt mode.")
-(defvar copilot-chat--prompt-history nil
-  "Copilot-chat prompt history.")
+(defvar ai-girlfriend--prompt-history nil
+  "ai-girlfriend prompt history.")
 
-(define-minor-mode copilot-chat-prompt-mode
+(define-minor-mode ai-girlfriend-prompt-mode
   "Minor mode for the Copilot Chat Prompt region."
   :init-value nil
   :lighter " Copilot Chat Prompt"
-  :keymap copilot-chat-prompt-mode-map)
+  :keymap ai-girlfriend-prompt-mode-map)
 
-(defun copilot-chat--write-buffer (instance data save &optional buffer)
+(defun ai-girlfriend--write-buffer (instance data save &optional buffer)
   "Write content to the Copilot Chat BUFFER.
 Argument INSTANCE is the copilot chat instance to use.
 Argument DATA data to be inserted in buffer.
@@ -64,55 +64,55 @@ defaults to instance's chat buffer."
   (if buffer
       (with-current-buffer buffer
         (insert data))
-    (with-current-buffer (copilot-chat--get-buffer instance)
+    (with-current-buffer (ai-girlfriend--get-buffer instance)
       (let ((write-fn
-             (copilot-chat-frontend-write-fn (copilot-chat--get-frontend))))
+             (ai-girlfriend-frontend-write-fn (ai-girlfriend--get-frontend))))
         (when write-fn
           (if save
               (save-excursion (funcall write-fn data))
             (funcall write-fn data)))))))
 
-(defun copilot-chat--format-data (instance content type)
+(defun ai-girlfriend--format-data (instance content type)
   "Format the CONTENT according to the frontend.
 Argument INSTANCE is the copilot chat instance to use.
 Argument CONTENT is the data to format.
 Argument TYPE is the type of data to format: `answer` or `prompt`."
   (let ((format-fn
-         (copilot-chat-frontend-format-fn (copilot-chat--get-frontend))))
+         (ai-girlfriend-frontend-format-fn (ai-girlfriend--get-frontend))))
     (if format-fn
         (funcall format-fn instance content type)
       content)))
 
-(defun copilot-chat-prompt-cb (instance content &optional buffer)
+(defun ai-girlfriend-prompt-cb (instance content &optional buffer)
   "Function called by backend when data is received.
 Argument INSTANCE is the copilot chat instance to use.
 Argument CONTENT is data received from backend.
 Optional argument BUFFER is the buffer to write data in."
-  (if (string= content copilot-chat--magic)
+  (if (string= content ai-girlfriend--magic)
       (progn
-        (when (boundp 'copilot-chat--spinner-timer)
-          (copilot-chat--spinner-stop instance))
-        (copilot-chat--write-buffer instance
-                                    (copilot-chat--format-data
-                                     instance "\n\n" 'answer)
-                                    (not copilot-chat-follow)
-                                    buffer))
-    (copilot-chat--write-buffer instance
-                                (copilot-chat--format-data
-                                 instance content 'answer)
-                                (not copilot-chat-follow)
-                                buffer)))
+        (when (boundp 'ai-girlfriend--spinner-timer)
+          (ai-girlfriend--spinner-stop instance))
+        (ai-girlfriend--write-buffer instance
+                                     (ai-girlfriend--format-data
+                                      instance "\n\n" 'answer)
+                                     (not ai-girlfriend-follow)
+                                     buffer))
+    (ai-girlfriend--write-buffer instance
+                                 (ai-girlfriend--format-data
+                                  instance content 'answer)
+                                 (not ai-girlfriend-follow)
+                                 buffer)))
 
-(defun copilot-chat--pop-current-prompt (instance)
+(defun ai-girlfriend--pop-current-prompt (instance)
   "Get current prompt to send and clean it.
 Argument INSTANCE is the copilot chat instance to use."
   (let ((pop-prompt-fn
-         (copilot-chat-frontend-pop-prompt-fn (copilot-chat--get-frontend))))
+         (ai-girlfriend-frontend-pop-prompt-fn (ai-girlfriend--get-frontend))))
     (when pop-prompt-fn
       (funcall pop-prompt-fn instance))))
 
-(provide 'copilot-chat-prompt-mode)
-;;; copilot-chat-prompt-mode.el ends here
+(provide 'ai-girlfriend-prompt-mode)
+;;; ai-girlfriend-prompt-mode.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

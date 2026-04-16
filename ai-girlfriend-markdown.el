@@ -1,6 +1,6 @@
-;;; copilot-chat --- copilot-chat-markdown.el --- copilot chat interface, markdown frontend -*- lexical-binding: t; -*-
+;;; ai-girlfriend --- ai-girlfriend-markdown.el --- copilot chat interface, markdown frontend -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2024  copilot-chat maintainers
+;; Copyright (C) 2024  ai-girlfriend maintainers
 
 ;; The MIT License (MIT)
 
@@ -30,73 +30,73 @@
 (require 'markdown-mode)
 (require 'polymode)
 
-(require 'copilot-chat-common)
-(require 'copilot-chat-instance)
-(require 'copilot-chat-prompt-mode)
-(require 'copilot-chat-prompts)
+(require 'ai-girlfriend-common)
+(require 'ai-girlfriend-instance)
+(require 'ai-girlfriend-prompt-mode)
+(require 'ai-girlfriend-prompts)
 
 ;;; Constants
-(defconst copilot-chat--markdown-delimiter (concat "# ╭──── Chat Input ────╮")
+(defconst ai-girlfriend--markdown-delimiter (concat "# ╭──── Chat Input ────╮")
   "The delimiter used to identify copilot chat input.")
 
 ;;; Polymode
 (define-derived-mode
- copilot-chat-markdown-prompt-mode
- markdown-mode
- "Copilot Chat markdown Prompt"
- "Major mode for the Copilot Chat Prompt region."
- (setq
-  major-mode 'copilot-chat-markdown-prompt-mode
-  mode-name "Copilot Chat markdown prompt")
- (copilot-chat-prompt-mode))
+  ai-girlfriend-markdown-prompt-mode
+  markdown-mode
+  "Copilot Chat markdown Prompt"
+  "Major mode for the Copilot Chat Prompt region."
+  (setq
+   major-mode 'ai-girlfriend-markdown-prompt-mode
+   mode-name "Copilot Chat markdown prompt")
+  (ai-girlfriend-prompt-mode))
 
 (define-hostmode
- poly-copilot-markdown-hostmode
- :mode 'copilot-chat-markdown-prompt-mode)
+  poly-copilot-markdown-hostmode
+  :mode 'ai-girlfriend-markdown-prompt-mode)
 
 (define-innermode
- poly-copilot-markdown-innermode
- :mode 'markdown-view-mode
- :head-matcher "\\`" ; Match beginning of buffer
- :tail-matcher (concat copilot-chat--markdown-delimiter "\n")
- :head-mode 'inner
- :tail-mode 'host)
+  poly-copilot-markdown-innermode
+  :mode 'markdown-view-mode
+  :head-matcher "\\`" ; Match beginning of buffer
+  :tail-matcher (concat ai-girlfriend--markdown-delimiter "\n")
+  :head-mode 'inner
+  :tail-mode 'host)
 
-(declare-function copilot-chat-markdown-poly-mode "copilot-chat-markdown"
+(declare-function ai-girlfriend-markdown-poly-mode "ai-girlfriend-markdown"
                   "Polymode for Copilot Chat Markdown.")
 
 (define-polymode
- copilot-chat-markdown-poly-mode
- :hostmode 'poly-copilot-markdown-hostmode
- :innermodes '(poly-copilot-markdown-innermode))
+  ai-girlfriend-markdown-poly-mode
+  :hostmode 'poly-copilot-markdown-hostmode
+  :innermodes '(poly-copilot-markdown-innermode))
 
 
 ;;; Functions
-(defun copilot-chat--markdown-format-data (instance content type)
+(defun ai-girlfriend--markdown-format-data (instance content type)
   "Format the CONTENT according to the frontend.
-INSTANCE is `copilot-chat' instance to use.
+INSTANCE is `ai-girlfriend' instance to use.
 Argument TYPE is the type of data to format: `answer` or `prompt`."
   (let ((data ""))
     (if (eq type 'prompt)
         (progn
-          (setf (copilot-chat-first-word-answer instance) t)
+          (setf (ai-girlfriend-first-word-answer instance) t)
           (setq data
                 (concat
                  "\n# "
                  (format-time-string "*[%T]* You\n")
                  (format "%s\n" content))))
-      (when (copilot-chat-first-word-answer instance)
-        (setf (copilot-chat-first-word-answer instance) nil)
+      (when (ai-girlfriend-first-word-answer instance)
+        (setf (ai-girlfriend-first-word-answer instance) nil)
         (setq data
               (concat
                "\n## "
                (concat
                 (format-time-string "*[%T]* ")
-                (format "Copilot(%s):\n" (copilot-chat-model instance))))))
+                (format "Copilot(%s):\n" (ai-girlfriend-model instance))))))
       (setq data (concat data content)))
     data))
 
-(defun copilot-chat--markdown-format-code (code language)
+(defun ai-girlfriend--markdown-format-code (code language)
   "Format code for markdown frontend.
 Argument CODE is the code to format.
 Argument LANGUAGE is the language of the code."
@@ -104,25 +104,25 @@ Argument LANGUAGE is the language of the code."
       (format "\n```%s\n%s\n```\n" language code)
     code))
 
-(defun copilot-chat--markdown-format-buffer (buffer instance)
+(defun ai-girlfriend--markdown-format-buffer (buffer instance)
   "Format the content of a buffer into a Markdown-compatible string.
 This function extracts the content of the specified BUFFER, determines
 its file name, relative path, and programming language, and formats the
 content as a Markdown code block.
-INSTANCE is `copilot-chat' instance, used to retrieve relative file path."
+INSTANCE is `ai-girlfriend' instance, used to retrieve relative file path."
   (with-current-buffer buffer
     (let* ((file-name (buffer-file-name))
            (relative-path
             (if file-name
-                (file-relative-name file-name (copilot-chat-directory instance))
+                (file-relative-name file-name (ai-girlfriend-directory instance))
               (buffer-name)))
            (content
-            (copilot-chat--markdown-format-code
+            (ai-girlfriend--markdown-format-code
              (buffer-substring-no-properties (point-min) (point-max))
              relative-path)))
       content)))
 
-(defun copilot-chat--get-markdown-block-content-at-point ()
+(defun ai-girlfriend--get-markdown-block-content-at-point ()
   "Get the content of the markdown block at point."
   (let* ((props (text-properties-at (point)))
          (face (plist-get props 'face)))
@@ -141,7 +141,7 @@ INSTANCE is `copilot-chat' instance, used to retrieve relative file path."
         (when content
           (list :content content :language lang))))))
 
-(defun copilot-chat--markdown-send-to-buffer ()
+(defun ai-girlfriend--markdown-send-to-buffer ()
   "Send the code block at point to buffer.
 Replace selection if any."
   (let ((buffer
@@ -150,110 +150,110 @@ Replace selection if any."
                           t ; REQUIRE-MATCH
                           nil ; INITIAL-INPUT
                           'buffer-name-history (buffer-name (current-buffer))))
-        (content (copilot-chat--get-markdown-block-content-at-point)))
+        (content (ai-girlfriend--get-markdown-block-content-at-point)))
     (when content
       (with-current-buffer buffer
         (when (use-region-p)
           (delete-region (region-beginning) (region-end)))
         (insert (plist-get content :content))))))
 
-(defun copilot-chat--markdown-copy ()
+(defun ai-girlfriend--markdown-copy ()
   "Copy the code block at point into kill ring."
-  (let ((content (copilot-chat--get-markdown-block-content-at-point)))
+  (let ((content (ai-girlfriend--get-markdown-block-content-at-point)))
     (when content
       (kill-new (plist-get content :content)))))
 
-(defun copilot-chat--markdown-write (data)
+(defun ai-girlfriend--markdown-write (data)
   "Write DATA at the end of the chat part of the buffer."
-  (copilot-chat--markdown-goto-input)
+  (ai-girlfriend--markdown-goto-input)
   (forward-line -3)
   (end-of-line)
   (insert data))
 
-(defun copilot-chat--markdown-goto-input ()
+(defun ai-girlfriend--markdown-goto-input ()
   "Go to the input part of the chat buffer.
 The input is created if not found."
   (goto-char (point-max))
-  (if (re-search-backward copilot-chat--markdown-delimiter nil t)
+  (if (re-search-backward ai-girlfriend--markdown-delimiter nil t)
       (forward-line 1)
     (insert "\n\n")
     (let ((start (point))
           (inhibit-read-only t))
-      (insert copilot-chat--markdown-delimiter "\n\n")
+      (insert ai-girlfriend--markdown-delimiter "\n\n")
       ;; Create overlay for read-only section
       (let ((overlay (make-overlay start (1- (point)))))
         (overlay-put overlay 'read-only t)
         (overlay-put overlay 'evaporate t)))))
 
-(defun copilot-chat--markdown-get-buffer (instance)
-  "Create `copilot-chat' buffers for INSTANCE."
-  (unless (buffer-live-p (copilot-chat-chat-buffer instance))
-    (setf (copilot-chat-chat-buffer instance)
+(defun ai-girlfriend--markdown-get-buffer (instance)
+  "Create `ai-girlfriend' buffers for INSTANCE."
+  (unless (buffer-live-p (ai-girlfriend-chat-buffer instance))
+    (setf (ai-girlfriend-chat-buffer instance)
           (get-buffer-create
-           (copilot-chat--get-buffer-name (copilot-chat-directory instance))))
-    (with-current-buffer (copilot-chat-chat-buffer instance)
-      (copilot-chat-markdown-poly-mode)
-      (copilot-chat--markdown-goto-input)
-      (setq-local default-directory (copilot-chat-directory instance))))
-  (copilot-chat-chat-buffer instance))
+           (ai-girlfriend--get-buffer-name (ai-girlfriend-directory instance))))
+    (with-current-buffer (ai-girlfriend-chat-buffer instance)
+      (ai-girlfriend-markdown-poly-mode)
+      (ai-girlfriend--markdown-goto-input)
+      (setq-local default-directory (ai-girlfriend-directory instance))))
+  (ai-girlfriend-chat-buffer instance))
 
 
-(defun copilot-chat--markdown-get-spinner-buffers (instance)
+(defun ai-girlfriend--markdown-get-spinner-buffers (instance)
   "Get markdown spinner buffers for INSTANCE."
-  (let ((buffer (copilot-chat--markdown-get-buffer instance)))
+  (let ((buffer (ai-girlfriend--markdown-get-buffer instance)))
     (with-current-buffer buffer
       (list (pm-get-buffer-of-mode 'markdown-view-mode) buffer))))
 
-(defun copilot-chat--markdown-insert-prompt (instance prompt)
+(defun ai-girlfriend--markdown-insert-prompt (instance prompt)
   "Insert PROMPT in the chat buffer corresponding to INSTANCE."
-  (with-current-buffer (copilot-chat--markdown-get-buffer instance)
-    (copilot-chat--markdown-goto-input)
+  (with-current-buffer (ai-girlfriend--markdown-get-buffer instance)
+    (ai-girlfriend--markdown-goto-input)
     (unless (eobp)
       (delete-region (point) (point-max)))
     (insert prompt)))
 
-(defun copilot-chat--markdown-pop-prompt (instance)
+(defun ai-girlfriend--markdown-pop-prompt (instance)
   "Get current prompt to send and clean it.
-INSTANCE is `copilot-chat' instance to use."
-  (with-current-buffer (copilot-chat--markdown-get-buffer instance)
-    (copilot-chat--markdown-goto-input)
+INSTANCE is `ai-girlfriend' instance to use."
+  (with-current-buffer (ai-girlfriend--markdown-get-buffer instance)
+    (ai-girlfriend--markdown-goto-input)
     (let ((prompt (buffer-substring-no-properties (point) (point-max))))
       (delete-region (point) (point-max))
       prompt)))
 
-(defun copilot-chat--markdown-init ()
+(defun ai-girlfriend--markdown-init ()
   "Initialize the copilot chat markdown frontend."
-  (setq copilot-chat-prompt copilot-chat-markdown-prompt))
+  (setq ai-girlfriend-prompt ai-girlfriend-markdown-prompt))
 
 ;; Top-level execute code.
 
 (cl-pushnew
- (make-copilot-chat-frontend
+ (make-ai-girlfriend-frontend
   :id 'markdown
-  :init-fn #'copilot-chat--markdown-init
+  :init-fn #'ai-girlfriend--markdown-init
   :clean-fn nil
   :instance-init-fn nil
   :instance-clean-fn nil
   :save-fn nil
   :load-fn nil
-  :format-fn #'copilot-chat--markdown-format-data
-  :format-code-fn #'copilot-chat--markdown-format-code
-  :format-buffer-fn #'copilot-chat--markdown-format-buffer
+  :format-fn #'ai-girlfriend--markdown-format-data
+  :format-code-fn #'ai-girlfriend--markdown-format-code
+  :format-buffer-fn #'ai-girlfriend--markdown-format-buffer
   :create-req-fn nil
-  :send-to-buffer-fn #'copilot-chat--markdown-send-to-buffer
-  :copy-fn #'copilot-chat--markdown-copy
+  :send-to-buffer-fn #'ai-girlfriend--markdown-send-to-buffer
+  :copy-fn #'ai-girlfriend--markdown-copy
   :yank-fn nil
-  :write-fn #'copilot-chat--markdown-write
-  :get-buffer-fn #'copilot-chat--markdown-get-buffer
-  :insert-prompt-fn #'copilot-chat--markdown-insert-prompt
-  :pop-prompt-fn #'copilot-chat--markdown-pop-prompt
-  :goto-input-fn #'copilot-chat--markdown-goto-input
-  :get-spinner-buffers-fn #'copilot-chat--markdown-get-spinner-buffers)
- copilot-chat--frontend-list
+  :write-fn #'ai-girlfriend--markdown-write
+  :get-buffer-fn #'ai-girlfriend--markdown-get-buffer
+  :insert-prompt-fn #'ai-girlfriend--markdown-insert-prompt
+  :pop-prompt-fn #'ai-girlfriend--markdown-pop-prompt
+  :goto-input-fn #'ai-girlfriend--markdown-goto-input
+  :get-spinner-buffers-fn #'ai-girlfriend--markdown-get-spinner-buffers)
+ ai-girlfriend--frontend-list
  :test #'equal)
 
-(provide 'copilot-chat-markdown)
-;;; copilot-chat-markdown.el ends here
+(provide 'ai-girlfriend-markdown)
+;;; ai-girlfriend-markdown.el ends here
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)

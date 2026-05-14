@@ -50,6 +50,11 @@
   :type '(choice (const :tag "Unlimited" nil) integer)
   :group 'ai-girlfriend)
 
+(defcustom ai-girlfriend-global-instruction-file nil
+  "Path to a global instruction file that applies to all projects."
+  :type 'string
+  :group 'ai-girlfriend)
+
 (defun ai-girlfriend--read-instruction-file (file-name)
   "Return the content of instruction file FILE-NAME or nil.
 If the file is larger than `ai-girlfriend-max-instruction-size',
@@ -57,8 +62,8 @@ ignore it and emit a message."
   (let* ((starting-path (or buffer-file-name default-directory))
          (github-dir (locate-dominating-file starting-path ".github"))
          (instruction-file
-          (and github-dir
-               (expand-file-name (concat ".github/" file-name) github-dir))))
+          (or ai-girlfriend-global-instruction-file
+              (and github-dir (expand-file-name (concat ".github/" file-name) github-dir)))))
     (when (and instruction-file (file-readable-p instruction-file))
       ;; Skip the file if it exceeds the configured size limit.
       (when (and ai-girlfriend-max-instruction-size
